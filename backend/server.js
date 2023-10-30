@@ -57,9 +57,10 @@ const SOCKET_EVENTS = {
 const sessionQueues = {}; // Store sockets for each session
 const REDIS_URL = process.env.REDIS_URL || ''
 
+console.log('REDIS_URL', REDIS_URL);
 // Create a function to create a Bull queue for a session
 function createQueueForSession(sessionId) {
-    const sessionQueue = new Bull(`session-${sessionId}`,);
+    const sessionQueue = new Bull(`session-${sessionId}`, REDIS_URL);
 
     // Listen to queue events
     sessionQueue.on('global:completed', (jobId, result) => {
