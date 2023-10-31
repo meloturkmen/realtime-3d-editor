@@ -61,6 +61,14 @@ const TransformationControls = () => {
 
 	const [state, dispatch] = useReducer(transformReducer, INITAL_STATE);
 
+	const handleRemoveModel = () => {
+		if (!model) return;
+
+		model.dispose();
+		dispatch({ type: ACTION_TYPES.REMOVE_MODEL });
+		socket.emit(SOCKET_EVENTS.REMOVE_MODEL, { mesh: model.id });
+	};
+
 	const handlePositionChange = (position) => {
 		dispatch({ type: ACTION_TYPES.POSITION_CHANGE, payload: position });
 		socket.emit(SOCKET_EVENTS.POSITION_CHANGE, { position, mesh: model.id });
@@ -245,7 +253,10 @@ const TransformationControls = () => {
 					</div>
 				</>
 			)}
-			<button className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'>
+			<button
+				onClick={handleRemoveModel}
+				className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
+			>
 				Remove Model
 			</button>
 		</div>
