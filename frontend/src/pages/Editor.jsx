@@ -64,9 +64,9 @@ const Editor = () => {
 		});
 	}
 
-	function onRemoveModel() {
+	function onRemoveModel({ spotId }) {
 		console.log('removing remote model');
-		const box = scene?.getMeshById('model');
+		const box = scene?.getMeshById(spotId);
 		box?.dispose();
 	}
 
