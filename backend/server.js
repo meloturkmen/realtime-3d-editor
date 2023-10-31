@@ -6,10 +6,18 @@ const cors = require("cors");
 const dotenv = require('dotenv');
 const { addNewOperation, getOperations, clearOperations, getOperationsForUser } = require('./db');
 const Bull = require('bull');
+dotenv.config();
+
+const {
+    REDIS_HOST,
+    REDIS_PORT,
+    REDIS_USERNAME,
+    REDIS_PASSWORD,
+} = process.env
 
 
 const { formatMessage } = require("./utils");
-dotenv.config();
+
 
 const PORT = process.env.PORT || 5000;
 // Serve static files from the public directory
@@ -53,29 +61,43 @@ const SOCKET_EVENTS = {
 }
 
 
-
 const sessionQueues = {}; // Store sockets for each session
 const REDIS_URL = process.env.REDIS_URL || ''
 
 
+
 // Create a function to create a Bull queue for a session
 function createQueueForSession(sessionId) {
-    const sessionQueue = new Bull(`session-${sessionId}`, REDIS_URL, {
-        redis: { tls: true, enableTLSForSentinelMode: false },
-    });
+    console.log('createQueueForSession', sessionId);
 
-    // Listen to queue events
-    sessionQueue.on('global:completed', (jobId, result) => {
-        console.log(`Job completed with result ${result}`);
-    });
+    try {
+        const sessionQueue = new Bull(`session-${sessionId}`, {
+            redis: {
+                host: REDIS_HOST,
+                port: REDIS_PORT,
+                password: REDIS_PASSWORD,
 
-    sessionQueue.on('global:failed', (jobId, err) => {
-        console.log(`Job ${jobId} failed with error ${err.message}`);
-    });
-
+            }
+        });
 
 
-    return sessionQueue;
+        // Listen to queue events
+        sessionQueue.on('global:completed', (jobId, result) => {
+            console.log(`Job completed with result ${result}`);
+        });
+
+        sessionQueue.on('global:failed', (jobId, err) => {
+            console.log(`Job ${jobId} failed with error ${err.message}`);
+        });
+
+        return sessionQueue;
+
+    } catch (error) {
+        console.log('error creating queue', error);
+    }
+    return null;
+
+
 }
 
 function processQueueForSession(sessionId) {
@@ -160,6 +182,8 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             modelId,
             spotId
         }) => {
+            console.log('add model event', modelId, spotId);
+
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.ADD_MODEL,
                 data: { modelId, spotId },
@@ -183,6 +207,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             position,
             mesh
         }) => {
+            console.log('position change event', position, mesh);
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.POSITION_CHANGE,
                 data: { position, mesh },
