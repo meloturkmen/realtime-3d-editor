@@ -119,7 +119,7 @@ function processQueueForSession(sessionId) {
         const socket = io.sockets.sockets.get(job.data.user.id);
 
         socket.broadcast.to(job.data.user.room).emit(job.data.event, job.data.data);
-        socket.broadcast.to(job.data.user.room).emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${job.data.user.username} has changed ${job.data.event} `) });
+        socket.broadcast.to(job.data.user.room).emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${job.data.user.username} has changed ${job.data.event.replace("-change", "")} `) });
 
         // Do some heavy work
         return job.data;
@@ -154,7 +154,9 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             // Send session history to user
             socket.emit(SOCKET_EVENTS.SESSION_HISTORY, { history });
             console.log('session history sent', history);
+            // send others to user join info message
 
+            socket.broadcast.to(user.room).emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${user.username} has joined the session`) });
 
             // Send users and room info
             socket.broadcast.to(user.room).emit(SOCKET_EVENTS.SESSION_USERS, {
@@ -172,9 +174,6 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
 
             processQueueForSession(sessionId, socket);
         }
-
-
-
 
 
         // if user add new model to 3D scene send info to all users in room
@@ -239,7 +238,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
         socket.on(SOCKET_EVENTS.DISCONNECT, () => {
             console.log('user disconnected');
 
-            socket.broadcast.emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, 'A user has left the session') });
+            socket.broadcast.emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${user.username} has left the session`) });
         });
     })
 });

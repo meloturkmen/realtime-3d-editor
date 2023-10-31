@@ -46,7 +46,7 @@ export const transformReducer = (state = INITAL_STATE, action) => {
 };
 
 const TransformationControls = () => {
-	const { scene, selectedSpotId } = useContext(sceneContext);
+	const { scene, selectedSpotId, setSelectedSpotId } = useContext(sceneContext);
 	const { socket } = useContext(SocketContext);
 
 	const selectedSpot = useMemo(() => {
@@ -65,6 +65,7 @@ const TransformationControls = () => {
 		if (!model) return;
 
 		model.dispose();
+		setSelectedSpotId(null);
 		dispatch({ type: ACTION_TYPES.REMOVE_MODEL });
 		socket.emit(SOCKET_EVENTS.REMOVE_MODEL, { mesh: model.id });
 	};
@@ -251,14 +252,14 @@ const TransformationControls = () => {
 							dataType={'scaling'}
 						/>
 					</div>
+					<button
+						onClick={handleRemoveModel}
+						className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
+					>
+						Remove Model
+					</button>
 				</>
 			)}
-			<button
-				onClick={handleRemoveModel}
-				className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
-			>
-				Remove Model
-			</button>
 		</div>
 	);
 };

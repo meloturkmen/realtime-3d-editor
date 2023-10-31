@@ -112,42 +112,40 @@ const SceneComponent = ({
 		}
 	}, []);
 
-	const loadDefaultModelsToSpots = useCallback(
-		async (scene) => {
-			for await (const stand of SPOTS) {
-				const { position, rotation, defaultModelID } = stand;
+	const loadDefaultModelsToSpots = useCallback(async (scene) => {
+		for await (const stand of SPOTS) {
+			const { position, rotation, defaultModelID } = stand;
 
-				const model = MODELS.find((m) => m.id === defaultModelID);
+			const model = MODELS.find((m) => m.id === defaultModelID);
 
-				// if room models includes the model id don't load the default model to the spot
+			// if room models includes the model id don't load the default model to the spot
 
-				if (!model) return;
+			if (!model) return;
 
-				const defaultModel = await SceneLoader.ImportMeshAsync('', '', model.url, scene);
+			const defaultModel = await SceneLoader.ImportMeshAsync('', '', model.url, scene);
 
-				const rootMesh = defaultModel.meshes[0];
+			const rootMesh = defaultModel.meshes[0];
 
-				rootMesh.id = stand.id;
-				rootMesh.position = position;
-				rootMesh.rotation = rotation;
-				rootMesh.scaling = new Vector3(1, 1, 1);
-				rootMesh.name = `base-model-${model.name}`;
+			rootMesh.id = stand.id;
+			rootMesh.position = position;
+			rootMesh.rotation = rotation;
+			rootMesh.scaling = new Vector3(1, 1, 1);
+			rootMesh.name = `base-model-${model.name}`;
 
-				rootMesh.metadata = {
-					type: 'model',
-					name: model.name,
-					spotID: stand.id,
-					sceneID: model.id,
-				};
+			rootMesh.metadata = {
+				type: 'model',
+				name: model.name,
+				spotID: stand.id,
+				sceneID: model.id,
+			};
 
-				// Create a TransformNode
-				const transformNode = new TransformNode(`transform-${stand.id}`, scene);
-				// Make the rootMesh a child of the transformNode
-				rootMesh.parent = transformNode;
-			}
-		},
-		[scene]
-	);
+			// Create a TransformNode
+			const transformNode = new TransformNode(`transform-${stand.id}`, scene);
+			// Make the rootMesh a child of the transformNode
+			rootMesh.parent = transformNode;
+		}
+	}, []);
+
 	const isMeshPickable = (name) => {
 		// if name includes any of the invalid names return false
 		for (let i = 0; i < SPOTS.length; i++) {
@@ -206,14 +204,12 @@ const SceneComponent = ({
 				mesh.actionManager.registerAction(
 					new ExecuteCodeAction(ActionManager.OnPickTrigger, (ev) => {
 						const spot = SPOTS.find((stand) => stand.name === mesh.name);
-						const model = scene.getMeshById(spot.id);
-
 						setSelectedSpotId(spot.id);
 					})
 				);
 			});
 		},
-		[selectedSpot, setSelectedSpotId]
+		[]
 	);
 
 	const createLightsAndEnvironment = async (scene) => {

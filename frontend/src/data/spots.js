@@ -30,7 +30,7 @@ export const SPOTS = [
         standName: 'NFT Canvas',
         name: "pictureframe2_primitive1",
         position: new Vector3(-0.57, 0.12, 0.82),
-        rotation: new Vector3(0, -Math.PI / 2, 0),
+        rotation: new Vector3(0, Math.PI / 2, 0),
         defaultModelID: 11,
     },
     {
@@ -38,7 +38,7 @@ export const SPOTS = [
         standName: 'NFT Canvas 1',
         name: "pictureframe1_primitive1",
         position: new Vector3(-0.57, 0.18, 1.15),
-        rotation: new Vector3(0, -Math.PI / 2, 0),
+        rotation: new Vector3(0, Math.PI / 2, 0),
         defaultModelID: 11,
     },
     {

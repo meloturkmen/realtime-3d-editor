@@ -10,6 +10,8 @@ import { SocketContext } from '../context/socketContext';
 import { MODELS } from '../data/models';
 import { SPOTS } from '../data/spots';
 import Loading from '../components/Loading';
+import Notifications from '../components/Notifications';
+import { ToastContainer, toast } from 'react-toastify';
 
 const user = {
 	id: uuid(),
@@ -27,6 +29,7 @@ const Editor = () => {
 	}
 
 	function onAddModel({ modelId, spotId }) {
+		
 		console.log('adding remote model');
 
 		const defaultModel = scene.getMeshById(spotId);
@@ -62,6 +65,7 @@ const Editor = () => {
 			rootMesh.isPickable = true;
 			// remove spot from the scene
 		});
+		
 	}
 
 	function onRemoveModel({ spotId }) {
@@ -113,6 +117,16 @@ const Editor = () => {
 	function onMessageReceive({ message }) {
 		console.log('message received');
 		console.log({ message });
+		toast.info(`${message.text}`, {
+			position: 'top-center',
+			autoClose: 5000,
+			hideProgressBar: false,
+			closeOnClick: true,
+			pauseOnHover: true,
+			draggable: true,
+			progress: undefined,
+			theme: 'light',
+		});
 	}
 
 	function onHistoryTake({ history }) {
