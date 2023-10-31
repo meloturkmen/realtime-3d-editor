@@ -1,7 +1,7 @@
 import { createContext, useEffect } from "react";
 import { io } from "socket.io-client";
 
-const SOCKET_URL = process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:5000';
+const SOCKET_URL = process.env.NODE_ENV === 'production' ? "https://realtime-editor-api.onrender.com" : 'http://localhost:5000';
 
 
 export const socket = io(SOCKET_URL, {
