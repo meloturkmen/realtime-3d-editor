@@ -29,7 +29,6 @@ const Editor = () => {
 	}
 
 	function onAddModel({ modelId, spotId }) {
-		
 		console.log('adding remote model');
 
 		const defaultModel = scene.getMeshById(spotId);
@@ -65,11 +64,10 @@ const Editor = () => {
 			rootMesh.isPickable = true;
 			// remove spot from the scene
 		});
-		
 	}
 
 	function onRemoveModel({ spotId }) {
-		console.log('removing remote model');
+		console.log('removing remote model', spotId);
 		const box = scene?.getMeshById(spotId);
 		box?.dispose();
 	}

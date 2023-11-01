@@ -8,7 +8,8 @@ import { SocketContext, socket } from '../context/socketContext';
 import { SOCKET_EVENTS } from '../constants/socketActions';
 
 const ModelListItem = ({ id, name, url }) => {
-	const { scene, selectedSpotId } = useContext(sceneContext);
+	const { scene, selectedSpotId, setSelectedSpotId, setIsModelLoading } =
+		useContext(sceneContext);
 	const { socket } = useContext(SocketContext);
 
 	const selectedSpot = useMemo(() => {
@@ -17,13 +18,8 @@ const ModelListItem = ({ id, name, url }) => {
 
 	const handleModelUpload = useCallback(() => {
 		const defaultModel = scene.getMeshById(selectedSpotId);
-
+		setIsModelLoading(true);
 		defaultModel && defaultModel.dispose();
-
-		// if (importedModel) {
-		// 	importedModel.dispose();
-		// 	setImportedModel(null);
-		// }
 
 		if (!selectedSpot) return;
 
@@ -63,6 +59,7 @@ const ModelListItem = ({ id, name, url }) => {
 				modelId: id,
 				spotId: selectedSpotId,
 			});
+			setIsModelLoading(false);
 		});
 	}, [selectedSpotId, scene]);
 

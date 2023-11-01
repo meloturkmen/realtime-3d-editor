@@ -13,6 +13,7 @@ import { sceneContext } from '../context/sceneContext';
 import { SocketContext } from '../context/socketContext';
 import { SPOTS } from '../data/spots';
 import TransformControlInput from './TransformControlInput';
+import Loading from './Loading';
 
 const INITAL_STATE = {
 	rotation: new Vector3(0, 0, 0),
@@ -46,7 +47,7 @@ export const transformReducer = (state = INITAL_STATE, action) => {
 };
 
 const TransformationControls = () => {
-	const { scene, selectedSpotId, setSelectedSpotId } = useContext(sceneContext);
+	const { scene, selectedSpotId, setSelectedSpotId, isModelLoading } = useContext(sceneContext);
 	const { socket } = useContext(SocketContext);
 
 	const selectedSpot = useMemo(() => {
@@ -55,7 +56,7 @@ const TransformationControls = () => {
 
 	const model = useMemo(() => {
 		return scene?.getMeshById(selectedSpotId);
-	}, [scene, selectedSpotId]);
+	}, [scene, selectedSpotId, isModelLoading]);
 
 	const [gizmoManager, setGizmoManager] = useState(null);
 
@@ -65,9 +66,8 @@ const TransformationControls = () => {
 		if (!model) return;
 
 		model.dispose();
+		socket.emit(SOCKET_EVENTS.REMOVE_MODEL, { spotId: selectedSpotId });
 		setSelectedSpotId(null);
-		dispatch({ type: ACTION_TYPES.REMOVE_MODEL });
-		socket.emit(SOCKET_EVENTS.REMOVE_MODEL, { mesh: model.id });
 	};
 
 	const handlePositionChange = (position) => {
@@ -184,82 +184,87 @@ const TransformationControls = () => {
 	if (!selectedSpotId) return null;
 
 	return (
-		<div className='flex flex-col  absolute top-4 left-4  h-[calc(100%-2rem)] rounded-lg  gap-8 px-5 w-[clamp(230px,20%,320px)] bg-gray-50 p-5'>
-			<h1 className='text-xl font-bold text-center'>Transformations</h1>
+		<div className='flex flex-col  absolute top-4 left-4  h-[calc(100%-2rem)] rounded-lg   w-[clamp(230px,20%,320px)] bg-gray-50 overflow-hidden'>
+			<div className='w-full h-full relative flex flex-col gap-8 p-5 '>
+				<h1 className='text-xl font-bold text-center'>Transformations</h1>
 
-			<div className='border-b border-b-zinc-300'>
-				<div className='w-full flex items-center justify-start gap-8  py-4'>
-					<p className=' text-sm font-medium w-24'>Spot ID </p>
-					<span className=' text-sm font-medium text-[#343cec]'>{selectedSpotId}</span>
-				</div>
-				<div className='w-full flex items-center justify-start gap-8 py-4'>
-					<p className=' text-sm font-medium w-24'>Spot Name </p>
-					<span className=' text-sm font-medium text-[#343cec]'>
-						{selectedSpot.standName}
-					</span>
-				</div>
-				{model && (
+				<div className='border-b border-b-zinc-300'>
 					<div className='w-full flex items-center justify-start gap-8  py-4'>
-						<p className=' text-sm font-medium w-24'>Model Name </p>
+						<p className=' text-sm font-medium w-24'>Spot ID </p>
 						<span className=' text-sm font-medium text-[#343cec]'>
-							{model?.name.replace('base-model-', '') || 'Model'}
+							{selectedSpotId}
 						</span>
 					</div>
+					<div className='w-full flex items-center justify-start gap-8 py-4'>
+						<p className=' text-sm font-medium w-24'>Spot Name </p>
+						<span className=' text-sm font-medium text-[#343cec]'>
+							{selectedSpot.standName}
+						</span>
+					</div>
+					{model && (
+						<div className='w-full flex items-center justify-start gap-8  py-4'>
+							<p className=' text-sm font-medium w-24'>Model Name </p>
+							<span className=' text-sm font-medium text-[#343cec]'>
+								{model?.name.replace('base-model-', '') || 'Model'}
+							</span>
+						</div>
+					)}
+				</div>
+				{isModelLoading && <Loading />}
+				{model && (
+					<>
+						<div className='flex flex-row justify-between'>
+							<div
+								className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
+								onClick={() => handleGizmoAttach()}
+							>
+								<FontAwesomeIcon icon={faArrowPointer} />
+							</div>
+							<div
+								className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
+								onClick={() => handleGizmoAttach('position')}
+							>
+								<FontAwesomeIcon icon={faUpDownLeftRight} />
+							</div>
+							<div
+								className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
+								onClick={() => handleGizmoAttach('scaling')}
+							>
+								<FontAwesomeIcon icon={faUpRightAndDownLeftFromCenter} />
+							</div>
+							<div
+								className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
+								onClick={() => handleGizmoAttach('rotation')}
+							>
+								<FontAwesomeIcon icon={faRotate} />
+							</div>
+						</div>
+						<div className='flex flex-col w-full gap-4'>
+							<TransformControlInput
+								value={state.position}
+								onChange={handlePositionChange}
+								dataType={'position'}
+							/>
+							<TransformControlInput
+								value={state.rotation}
+								onChange={handleRotationChange}
+								dataType={'rotation'}
+							/>
+							<TransformControlInput
+								value={state.scaling}
+								onChange={handleScalingChange}
+								dataType={'scaling'}
+							/>
+						</div>
+						<button
+							onClick={handleRemoveModel}
+							className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
+						>
+							Remove Model
+						</button>
+					</>
 				)}
 			</div>
-			{model && (
-				<>
-					<div className='flex flex-row justify-between'>
-						<div
-							className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
-							onClick={() => handleGizmoAttach()}
-						>
-							<FontAwesomeIcon icon={faArrowPointer} />
-						</div>
-						<div
-							className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
-							onClick={() => handleGizmoAttach('position')}
-						>
-							<FontAwesomeIcon icon={faUpDownLeftRight} />
-						</div>
-						<div
-							className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
-							onClick={() => handleGizmoAttach('scaling')}
-						>
-							<FontAwesomeIcon icon={faUpRightAndDownLeftFromCenter} />
-						</div>
-						<div
-							className='flex w-8 h-8 items-center justify-center bg-blue-600 text-white cursor-pointer rounded-md'
-							onClick={() => handleGizmoAttach('rotation')}
-						>
-							<FontAwesomeIcon icon={faRotate} />
-						</div>
-					</div>
-					<div className='flex flex-col w-full gap-4'>
-						<TransformControlInput
-							value={state.position}
-							onChange={handlePositionChange}
-							dataType={'position'}
-						/>
-						<TransformControlInput
-							value={state.rotation}
-							onChange={handleRotationChange}
-							dataType={'rotation'}
-						/>
-						<TransformControlInput
-							value={state.scaling}
-							onChange={handleScalingChange}
-							dataType={'scaling'}
-						/>
-					</div>
-					<button
-						onClick={handleRemoveModel}
-						className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
-					>
-						Remove Model
-					</button>
-				</>
-			)}
 		</div>
 	);
 };

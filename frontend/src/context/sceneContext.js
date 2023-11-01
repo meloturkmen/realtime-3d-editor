@@ -5,9 +5,10 @@ export const sceneContext = createContext(null);
 export const SceneProvider = ({ children }) => {
     const [scene, setScene] = useState(null);
     const [selectedSpotId, setSelectedSpotId] = useState(0);
+    const [isModelLoading, setIsModelLoading] = useState(false);
 
     return (
-        <sceneContext.Provider value={{ scene, setScene, selectedSpotId, setSelectedSpotId }}>
+        <sceneContext.Provider value={{ scene, setScene, selectedSpotId, setSelectedSpotId, isModelLoading, setIsModelLoading }}>
             {children}
         </sceneContext.Provider>
     );
