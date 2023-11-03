@@ -119,7 +119,9 @@ function processQueueForSession(sessionId) {
         const socket = io.sockets.sockets.get(job.data.user.id);
 
         socket.broadcast.to(job.data.user.room).emit(job.data.event, job.data.data);
-        socket.broadcast.to(job.data.user.room).emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${job.data.user.username} has changed ${job.data.event.replace("-change", "")} `) });
+
+
+        socket.broadcast.to(job.data.user.room).emit(SOCKET_EVENTS.MESSAGE, { message: job.data.message });
 
         // Do some heavy work
         return job.data;
@@ -186,6 +188,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.ADD_MODEL,
                 data: { modelId, spotId },
+                message: formatMessage(BOT_NAME, `${user.username} has added a new model to spot ${spotId}`),
                 user: user
             });
         });
@@ -197,6 +200,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.REMOVE_MODEL,
                 data: { spotId },
+                message: formatMessage(BOT_NAME, `${user.username} has removed a model on spot ${spotId}`),
                 user: user
             });
         });
@@ -210,6 +214,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.POSITION_CHANGE,
                 data: { position, mesh },
+                message: formatMessage(BOT_NAME, `${user.username} has changed position of model on spot ${mesh}`),
                 user: user
             });
         })
@@ -218,6 +223,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.ROTATION_CHANGE,
                 data: { rotation, mesh },
+                message: formatMessage(BOT_NAME, `${user.username} has changed rotation of model on  spot ${mesh}`),
                 user: user
             });
         });
@@ -226,6 +232,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
             sessionQueues[sessionId].add({
                 event: SOCKET_EVENTS.SCALING_CHANGE,
                 data: { scale, mesh },
+                message: formatMessage(BOT_NAME, `${user.username} has changed scaling of model on spot ${mesh}`),
                 user: user
             });
         });
@@ -236,8 +243,6 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
         });
 
         socket.on(SOCKET_EVENTS.DISCONNECT, () => {
-            console.log('user disconnected');
-
             socket.broadcast.emit(SOCKET_EVENTS.MESSAGE, { message: formatMessage(BOT_NAME, `${user.username} has left the session`) });
         });
     })
