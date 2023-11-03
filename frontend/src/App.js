@@ -14,15 +14,8 @@ function App() {
         </div>
         <ToastContainer
           style={{
-            width: 'clamp(300px,40%,400px)',
+            width: 'clamp(300px,40%,480px)',
           }}
-          position='top-center'
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
         />
       </SocketProvider>
     </SceneProvider>

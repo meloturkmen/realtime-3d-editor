@@ -4,7 +4,7 @@ export const sceneContext = createContext(null);
 
 export const SceneProvider = ({ children }) => {
     const [scene, setScene] = useState(null);
-    const [selectedSpotId, setSelectedSpotId] = useState(0);
+    const [selectedSpotId, setSelectedSpotId] = useState(null);
     const [isModelLoading, setIsModelLoading] = useState(false);
 
     return (

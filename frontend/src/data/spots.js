@@ -113,5 +113,13 @@ export const SPOTS = [
         position: new Vector3(0.3, 0.01, 0.18),
         rotation: new Vector3(0, -Math.PI / 2, 0),
         defaultModelID: 12,
+    }, {
+
+        id: 15,
+        name: "free",
+        standName: "ground",
+        position: new Vector3(0.2, 0.02, 1.150),
+        rotation: new Vector3(0, 0, 0),
+        defaultModelID: 0,
     }
 ]

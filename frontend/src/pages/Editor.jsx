@@ -10,8 +10,7 @@ import { SocketContext } from '../context/socketContext';
 import { MODELS } from '../data/models';
 import { SPOTS } from '../data/spots';
 import Loading from '../components/Loading';
-import Notifications from '../components/Notifications';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 const user = {
 	id: uuid(),
@@ -19,7 +18,7 @@ const user = {
 };
 
 const Editor = () => {
-	const { scene } = useContext(sceneContext);
+	const { scene, selectedSpotId ,setSelectedSpotId} = useContext(sceneContext);
 	const { socket } = useContext(SocketContext);
 
 	const [isLoading, setIsLoading] = useState(true);
@@ -117,10 +116,10 @@ const Editor = () => {
 		console.log({ message });
 		toast.info(`${message.text}`, {
 			position: 'top-center',
-			autoClose: 5000,
+			autoClose: 2000,
 			hideProgressBar: false,
 			closeOnClick: true,
-			pauseOnHover: true,
+			pauseOnHover: false,
 			draggable: true,
 			progress: undefined,
 			theme: 'light',
@@ -185,11 +184,17 @@ const Editor = () => {
 	}, [scene, socket]);
 
 	return (
-		<div className='flex h-full w-full'>
+		<div className='flex h-full w-full relativeƒ'>
 			{isLoading && <Loading />}
 			<Scene />
-			<ModelList />
+			{selectedSpotId && <ModelList />}
 			<TransformationControls />
+			<button className='absolute top-2 right-4 bg-blue-600 px-3 py-2 rounded-md text-white w-[clamp(230px,20%,300px)]' onClick={()=>setSelectedSpotId(15)}>
+				Add New Model
+			</button>
+			<div className='absolute top-2 left-4 border  border-blue-600 px-3 py-2 rounded-md text-white w-[clamp(230px,20%,320px)]'>
+				Username : {user.username} <br />
+			</div>
 		</div>
 	);
 };

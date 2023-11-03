@@ -18,9 +18,12 @@ import {
 	ExecuteCodeAction,
 	GlowLayer,
 	ActionManager,
+	HighlightLayer,
 } from '@babylonjs/core';
 import '@babylonjs/loaders';
 import { sceneContext } from '../context/sceneContext';
+import { usePreviousPersistent } from '../hooks/usePrevious';
+
 import { isMobile } from '../utils';
 import { SPOTS } from '../data/spots';
 import { MODELS } from '../data/models';
@@ -36,6 +39,8 @@ const SceneComponent = ({
 }) => {
 	const reactCanvas = useRef(null);
 	const { scene, setScene, selectedSpotId, setSelectedSpotId } = useContext(sceneContext);
+
+	const previousSelectedSpotId = usePreviousPersistent(selectedSpotId);
 
 	const createEngine = async () => {
 		const canvas = reactCanvas.current;
@@ -156,61 +161,58 @@ const SceneComponent = ({
 		return false;
 	};
 
-	const setupHotspots = useCallback(
-		(scene) => {
-			if (isMobile) return;
+	const setupHotspots = useCallback((scene) => {
+		if (isMobile) return;
 
-			console.log('setupHotspots');
-			const meshes = SPOTS.map((stand) => scene.getMeshByName(stand.name));
+		console.log('setupHotspots');
+		const meshes = SPOTS.map((stand) => scene.getMeshByName(stand.name));
 
-			meshes.forEach((mesh) => {
-				if (!mesh) return;
-				// eğer mesh bir transform node ise onun çocuğu olan mesh'i al
-				const oldMaterial = mesh?.material;
+		meshes.forEach((mesh) => {
+			if (!mesh) return;
+			// eğer mesh bir transform node ise onun çocuğu olan mesh'i al
+			const oldMaterial = mesh?.material;
 
-				if (!isMeshPickable(mesh.name)) return;
+			if (!isMeshPickable(mesh.name)) return;
 
-				mesh.isPickable = true; // Mesh'in seçilebilir olduğunu belirtin
+			mesh.isPickable = true; // Mesh'in seçilebilir olduğunu belirtin
 
-				// when mouse over the mesh or transform node highlight the mesh and show hotspot circle mesh
-				mesh.actionManager = new ActionManager(scene);
+			// when mouse over the mesh or transform node highlight the mesh and show hotspot circle mesh
+			mesh.actionManager = new ActionManager(scene);
 
-				mesh.actionManager.registerAction(
-					new ExecuteCodeAction(ActionManager.OnPointerOverTrigger, (ev) => {
-						const newMetarial = mesh.material.clone('newMaterial');
+			mesh.actionManager.registerAction(
+				new ExecuteCodeAction(ActionManager.OnPointerOverTrigger, (ev) => {
+					const newMetarial = mesh.material.clone('newMaterial');
 
-						newMetarial.emissiveColor = Color3.Teal();
+					newMetarial.emissiveColor = Color3.Teal();
 
-						mesh.material = newMetarial;
+					mesh.material = newMetarial;
 
-						// make mesh glow
-						const gl = new GlowLayer('glow', scene);
-						mesh.material.emissiveColor = Color3.Teal();
-						gl.intensity = 0.1;
+					// make mesh glow
+					const gl = new GlowLayer('glow', scene);
+					mesh.material.emissiveColor = Color3.Teal();
+					gl.intensity = 0.1;
 
-						gl.addIncludedOnlyMesh(mesh);
-					})
-				);
+					gl.addIncludedOnlyMesh(mesh);
+				})
+			);
 
-				mesh.actionManager.registerAction(
-					new ExecuteCodeAction(ActionManager.OnPointerOutTrigger, (ev) => {
-						if (selectedSpot === mesh.name) return;
-						// remove glow layer
-						mesh.material = oldMaterial;
-						scene.getGlowLayerByName('glow').removeIncludedOnlyMesh(mesh);
-					})
-				);
+			mesh.actionManager.registerAction(
+				new ExecuteCodeAction(ActionManager.OnPointerOutTrigger, (ev) => {
+					if (selectedSpot === mesh.name) return;
+					// remove glow layer
+					mesh.material = oldMaterial;
+					scene.getGlowLayerByName('glow').removeIncludedOnlyMesh(mesh);
+				})
+			);
 
-				mesh.actionManager.registerAction(
-					new ExecuteCodeAction(ActionManager.OnPickTrigger, (ev) => {
-						const spot = SPOTS.find((stand) => stand.name === mesh.name);
-						setSelectedSpotId(spot.id);
-					})
-				);
-			});
-		},
-		[]
-	);
+			mesh.actionManager.registerAction(
+				new ExecuteCodeAction(ActionManager.OnPickTrigger, (ev) => {
+					const spot = SPOTS.find((stand) => stand.name === mesh.name);
+					setSelectedSpotId(spot.id);
+				})
+			);
+		});
+	}, []);
 
 	const createLightsAndEnvironment = async (scene) => {
 		const reflectionTexture = CubeTexture.CreateFromPrefilteredData(
@@ -223,6 +225,8 @@ const SceneComponent = ({
 
 		scene.createDefaultSkybox(reflectionTexture, true, 1000, 0.5);
 		scene.environmentTexture = reflectionTexture;
+		// add red glow layer both model and mesh to show that it is selected and active
+		const hl = new HighlightLayer('hn-default-hl1', scene);
 	};
 
 	const createAndConfigureCamera = async (scene) => {
@@ -260,10 +264,10 @@ const SceneComponent = ({
 		if (scene.isReady()) {
 			createAndConfigureCamera(scene);
 			createLightsAndEnvironment(scene);
-			loadAndInitializeRoomModel(scene);
+			await loadAndInitializeRoomModel(scene);
 			addCameraMovementControls(scene);
-			await loadDefaultModelsToSpots(scene);
 			setupHotspots(scene);
+			await loadDefaultModelsToSpots(scene);
 
 			if (typeof onSceneReady === 'function') onSceneReady(scene);
 		} else {
@@ -277,9 +281,40 @@ const SceneComponent = ({
 
 		return scene;
 	};
+	useEffect(() => {
+		if (scene) {
+			const hl = scene.getHighlightLayerByName('hn-default-hl1');
+
+			//Remove previous highlighting
+			const previousSpot = SPOTS.find((stand) => stand.id === previousSelectedSpotId);
+
+			const previousMesh = scene.getMeshByName(previousSpot?.name);
+			const previousModel = scene.getMeshById(previousSelectedSpotId);
+
+			previousModel?.getChildMeshes().forEach((m) => {
+				hl.removeMesh(m);
+			});
+			previousModel && hl.removeMesh(previousModel);
+			previousMesh && hl.removeMesh(previousMesh);
+
+			// Highlight the newly selected spot
+			const spot = SPOTS.find((stand) => stand.id === selectedSpotId);
+
+			const mesh = scene.getMeshByName(spot?.name);
+			const model = scene.getMeshById(selectedSpotId);
+			console.log('selected model', model);
+
+			model?.getChildMeshes().forEach((m) => {
+				hl.addMesh(m, Color3.Red());
+			});
+			model && hl.addMesh(model, Color3.Red());
+			mesh && hl.addMesh(mesh, Color3.Red());
+		}
+	}, [scene, selectedSpotId, previousSelectedSpotId]);
 
 	const start = async () => {
 		const sc = await createScene();
+
 		console.log('scene loaded successfully');
 		setScene(() => sc);
 	};

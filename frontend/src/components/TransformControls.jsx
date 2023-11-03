@@ -100,9 +100,6 @@ const TransformationControls = () => {
 			};
 
 			const onDragEndCallback = (property, handleChange) => (event) => {
-				console.log('event', event);
-
-				console.log('gizmoManager', gizmoManager);
 				const newValue = new Vector3(
 					model[property].x,
 					model[property].y,
@@ -155,6 +152,10 @@ const TransformationControls = () => {
 		},
 		[model, gizmoManager]
 	);
+	const handleUnSelect = useCallback(() => {
+		setSelectedSpotId(null);
+		handleGizmoAttach();
+	}, [handleGizmoAttach, setSelectedSpotId]);
 
 	useEffect(() => {
 		if (!scene || !model) return;
@@ -184,27 +185,27 @@ const TransformationControls = () => {
 	if (!selectedSpotId) return null;
 
 	return (
-		<div className='flex flex-col  absolute top-4 left-4  h-[calc(100%-2rem)] rounded-lg   w-[clamp(230px,20%,320px)] bg-gray-50 overflow-hidden'>
+		<div className='flex flex-col  absolute top-16 left-4  h-[calc(100%-72px)] rounded-lg   w-[clamp(230px,20%,320px)] bg-gray-50 overflow-hidden'>
 			<div className='w-full h-full relative flex flex-col gap-8 p-5 '>
 				<h1 className='text-xl font-bold text-center'>Transformations</h1>
 
 				<div className='border-b border-b-zinc-300'>
 					<div className='w-full flex items-center justify-start gap-8  py-4'>
 						<p className=' text-sm font-medium w-24'>Spot ID </p>
-						<span className=' text-sm font-medium text-[#343cec]'>
+						<span className=' text-sm font-medium text-[#343cec] w-3/5'>
 							{selectedSpotId}
 						</span>
 					</div>
 					<div className='w-full flex items-center justify-start gap-8 py-4'>
 						<p className=' text-sm font-medium w-24'>Spot Name </p>
-						<span className=' text-sm font-medium text-[#343cec]'>
+						<span className=' text-sm font-medium text-[#343cec] w-3/5'>
 							{selectedSpot.standName}
 						</span>
 					</div>
 					{model && (
 						<div className='w-full flex items-center justify-start gap-8  py-4'>
 							<p className=' text-sm font-medium w-24'>Model Name </p>
-							<span className=' text-sm font-medium text-[#343cec]'>
+							<span className=' text-sm font-medium text-[#343cec] w-3/5'>
 								{model?.name.replace('base-model-', '') || 'Model'}
 							</span>
 						</div>
@@ -256,12 +257,21 @@ const TransformationControls = () => {
 								dataType={'scaling'}
 							/>
 						</div>
-						<button
-							onClick={handleRemoveModel}
-							className='flex w-full bg-blue-500 mt-auto text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
-						>
-							Remove Model
-						</button>
+
+						<div className='flex mt-auto flex-col gap-4'>
+							<button
+								onClick={handleUnSelect}
+								className='flex w-ful border-blue-700 text-blue-700 border py-2 rounded-md text-center font-medium items-center justify-center hover:bg-gray-500 hover:text-white hover:border-gray-500'
+							>
+								Unselect
+							</button>
+							<button
+								onClick={handleRemoveModel}
+								className='flex w-full bg-blue-500  text-white py-2 rounded-md text-center font-medium items-center justify-center hover:bg-blue-700'
+							>
+								Remove Model
+							</button>
+						</div>
 					</>
 				)}
 			</div>
