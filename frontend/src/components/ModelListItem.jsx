@@ -3,7 +3,7 @@ import holonextlogo from '../assets/images/thumbnail.png';
 import { sceneContext } from '../context/sceneContext';
 import '@google/model-viewer';
 import { SPOTS } from '../data/spots';
-import { SceneLoader, Vector3 } from '@babylonjs/core';
+import { Color3, SceneLoader, Vector3 } from '@babylonjs/core';
 import { SocketContext, socket } from '../context/socketContext';
 import { SOCKET_EVENTS } from '../constants/socketActions';
 
@@ -54,6 +54,21 @@ const ModelListItem = ({ id, name, url }) => {
 			});
 
 			rootMesh.isPickable = true;
+
+			// highlight the selected mesh
+			// highlightSelectedMesh(rootMesh);
+
+			const hl = scene.getHighlightLayerByName('hn-default-hl1');
+
+			if (hl) {
+				hl.addMesh(rootMesh, Color3.Red());
+				rootMesh?.getChildMeshes().forEach((m) => {
+					hl.addMesh(m, Color3.Red());
+				});
+			}
+
+
+
 
 			socket.emit(SOCKET_EVENTS.ADD_MODEL, {
 				modelId: id,
