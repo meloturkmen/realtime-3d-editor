@@ -67,6 +67,7 @@ const TransformationControls = () => {
 
 		model.dispose();
 		socket.emit(SOCKET_EVENTS.REMOVE_MODEL, { spotId: selectedSpotId });
+		handleGizmoAttach();
 		setSelectedSpotId(null);
 	};
 
